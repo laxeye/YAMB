@@ -7,7 +7,7 @@ It's based on t-Distributed Stochastic Neighbor Embedding (t-SNE) (van der Maate
 * R >= 3.2
 * R packages: ggplot2, Rtsne, getopt, dbscan
 * samtools
-* Read mapping software: **bowtie2** (default) or minimap or bwa.
+* Read mapping software: **bowtie2** (by default) or minimap or bwa.
 * esl-sfetch from easel for sequence extracting
 
 To install R packages just run R environment and execute command:
@@ -19,49 +19,36 @@ YAMB was tested on Ubuntu 16.04 and Ubuntu 18.04.
 ## How to use
 At first, add the folder with executables to your PATH variable.
 
-Cut metagenome contigs using cut-contigs.pl:
-./cut-contigs.pl assembly.fna > cutted.assembly.fna
-By default window size equals to 20 000 nucleotides.
-
-Map reads to cutted contigs using Your prefered mapping software
-
-Sort and index resulting mapping file using samtools. For example if You have a mapping file in SAM format called "mapping.sam" execute next commands:
-samtools view -b -F 4 mapping.sam | samtools sort - > mapping.bam
-samtools index mapping.bam
-
-Run yamb.sh providing multifasta file with contigs, sequencing reads and output folder (it will be cleaned):
-./yamb.sh contigs.fasta R1.fastq.gz R2.fastq.gz binning-output
-
+Run yamb.sh providing multifasta file with contigs, sequencing reads and output folder (optional, new folder *contigs filename*-yamb will be created by default):
+./yamb.sh contigs.fasta R1.fastq\[.gz\] R2.fastq\[.gz\] \[output folder\]
 
 In output folder you will find several files 
 yamb-pp-\*-hdbscan.csv
 where contig number, t-SNE perplexity and cluster count presented in the filenames.
 These files are tab-separated sheets with columns:
 Contig ID, 1st tSNE component, 2nd tSNE component, cluster #, normalised coverage, contig length
-Corersponding files
-yamb-pp-\*-hdbscan.png
-are visualization of contigs in two-dimensional space, where size of point depends on contig size, transparence - on mean contig coverage. Bins are coloured by different colours and labeled with a number. Please notice that K-means clustering alghorhytm may resilt in bin overdividing or bins merging, thats why you need to check bin size and its graphical imaging.
+Corersponding files *yamb-pp-\*-hdbscan.png* are two-dimensional visualizations of contig fragments. Bins are coloured by different colours.
 
-
-To get a list of contigs in any bin you can use next command, where You should substitute X with bin number:
-awk -F"\t" '{if($4 == X) print $1}' yamb-NK-pp-NN-cl-NN.csv | sed 's/"//g' > binX.txt
-
-Contig acquisition performed by easel utility "esl-sfetch" according it's instructions.
+Contig acquisition is performed by easel utility "esl-sfetch". You can find metagenomic bins-yamb-N, where N is perplexity parameter.
 
 It's strongly recommended to estimate completeness and contamination of bins.
 
 
 ## Validation
 
-The pipeline was validates using synthetic methagenome, which ressembled an acidic mine drainage community of 7 
-bacterial and archeal species. Five bins showed completeness between 94.49% and 100%, contamination was bellow 1.82%. One archael bin with coverage near 3x showed completeness 71.95% and 0% contamination, one bacterial bin 21.69% and 0% respectively. Bad results can be explained by random read generation and low initial coverage (in proportion to share in community) which caused genome parts missing.
+The pipeline was validated on synthetic methagenome, which ressembled an AMD community and included 7 bacterial and archeal species. Reads were produced by SimSeq and assembled by SPAdes. Five bins showed completeness between 94.49% and 100%, contamination was bellow 1.82%. One archael bin with mean coverage near 3x showed completeness 71.95% and 0% contamination, one bacterial bin 21.69% and 0% respectively. Low completeness of two bins can be explained by random read generation and low initial coverage (proportionally to their shares in community) which caused messing of genome parts. Binning results were compared to taxonomy assignment using best hits of nucleotide BLAST alignment against reference genomes: precision equaled 98.56%, recall equaled 98.13%.
+
+YAMB binnnig results are comparable to the CONCOCT binning results on the real metagenomic data in terms of completeness and contamination of metagenomics bins (Korzhenkov A., unpublished data).
 
 
 ## Realisation
 
 A. Korzhenkov, 2017-2018
-With kind help of:
-S. Toshchakov, O. Golyshina and A. Tepliuk.
+
+
+## How to cite
+
+The paper is still pending. 
 
 
 ## References
