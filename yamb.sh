@@ -72,7 +72,7 @@ then
 		mkdir $D
 		for i in $(seq 0 $N)
 		do
-			esl-sfetch -f cut.contigs.fna <(awk '{if($4 == '$i') print $1}' $f) | perl -lne 'if(/>(.+)_(\d+)/){$a=$1;$i=$2;if(!($a=~/$ao/ and $b==$i-1)){$ao=$a;$b=0;print "$_"}else{$b=$i}}else{print}' > $D/bin-$i.fna
+			esl-sfetch -f cut.contigs.fna <(awk '{if($4 == '$i') print $1}' $f) | perl -lne 'if(/>(.+)_(\d+)/){$a=$1;$i=$2;if(!($a=~/$ao/ and $b==$i-1)){$ao=$a;$b=i;print "$_"}else{$b=$i}}else{print}' > $D/bin-$i.fna
 		done
 	done
 else
