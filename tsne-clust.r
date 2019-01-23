@@ -34,11 +34,12 @@ if ( is.null( opt$minimumlength ) ) { opt$minimumlength = 1000  }
 
 
 rdata <- read.delim(opt$inputfile,header=F)
-rdata <- rdata[as.matrix(rdata[,259])>=opt$minimumlength,]
+lastcol = ncol(rdata)
+rdata <- rdata[as.matrix(rdata[,lastcol])>=opt$minimumlength,]
 
 n <- min(opt$contignumber, nrow(rdata))
 
-mdata <- as.matrix(rdata[1:n,2:258])
+mdata <- as.matrix(rdata[1:n,2:(lastcol-1)])
 Knorm <- apply(mdata,2,mean)
 normdata <- sweep(mdata,2,Knorm,"/")
 
@@ -66,7 +67,7 @@ mytsne <- function(i){
 # For testing purposes only
 mykmean <- function(tsne,nc,i){
 	kx <- kmeans(tsne,centers=nc,nstart=100,iter.max=10000)
-	cldata <- data.frame(rdata[1:n,1],tsne,kx$cluster,rdata[1:n,258:259])
+	cldata <- data.frame(rdata[1:n,1],tsne,kx$cluster,rdata[1:n,(lastcol-1):lastcol])
 	colnames(cldata)=c("Contig ID","X","Y","cluster","Ncoverage","length")
 	cat(paste0("Clustering results for ",nc," clusters:\n"))
 	cat("Bin#\tbin size, nt.\n")
@@ -83,7 +84,7 @@ mykmean <- function(tsne,nc,i){
 myhdbscan <- function(tsne){
 	hx <- hdbscan(tsne,minPts=20)
 	nc <- max(hx$cluster)
-	cldata <- data.frame(rdata[1:n,1],tsne,hx$cluster,rdata[1:n,258:259])
+	cldata <- data.frame(rdata[1:n,1],tsne,hx$cluster,rdata[1:n,(lastcol-1):lastcol])
 	colnames(cldata)=c("Seq ID","X","Y","cluster","Ncoverage","length")
 	cat(paste0("Clustering results for ",nc," clusters:\n"))
 	cat("Bin#\tbin size, nt.\n")
