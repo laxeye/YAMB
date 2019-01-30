@@ -1,26 +1,72 @@
 #!/usr/bin/env bash
 if ( [[ -z "$1" ]] || [[ $1 == -h* ]] || [[ $1 == -v* ]] )
 then
-	echo "Yet Another Metagenome Binner"
-	echo "Code: A. Korzhenkov. 2017-2018"
-	echo "Please run as: $0 <contig.fasta> <Read1.fastq[.gz]> <Read2.fastq[.gz]> [output folder]"
+	echo "Yet Another Metagenome Binner. Code by A. Korzhenkov. 2017-2019"
+	echo "Usage: $0 -c <contigs> -f <Forward reads> -r <Reverse reads> [ -o <output folder> ] [ -t <CPU threads> ] [ -m  minimum contig length ]"
+	echo "Reads may be gzipped."
+	echo "Multi-threading makes sense only for mapping."
 	exit
 fi
 
 if ! ( which samtools > /dev/null ); then echo "You should install samtools.";exit 1; fi
 
 
-if ! ( [[ -f $1 ]] && [[ -f $2 ]] && [[ -f $3 ]] )
+while (( "$#" )); do
+  case "$1" in
+    -f|--forward)
+      R1=$2
+      shift 2
+      ;;
+    -r|--reverse)
+      R2=$2
+      shift 2
+      ;;
+#	 will be implemented soon
+#    -s|--single)
+#      R1=$2
+#      shift 2
+#      ;;
+    -c|--contigs)
+      contigs=$2
+      shift 2
+      ;;
+    -o|--output)
+      output=$2
+      shift 2
+      ;;
+    -t|--threads)
+      THREADS=$2
+      shift 2
+      ;;
+    -m|--minimum-length)
+      MINLENGTH=$2
+      shift 2
+      ;;
+    --) # end argument parsing
+      shift
+      break
+      ;;
+    -*|--*=) # unsupported flags
+      echo "Error: Unsupported flag $1" >&2
+      exit 1
+      ;;
+    *) # preserve positional arguments
+      PARAMS="$PARAMS $1"
+      shift
+      ;;
+  esac
+done
+
+if ! ( ( [[ -f $R1 ]] && [[ -f $R2 ]] ) || ( [[ -f $R1 ]] && [ ! -z $R2 ] ) && [[ -f $contigs ]] )
 then
 	echo "Input files not found!"
 	exit 1
 fi
 
-THREADS=2
-contigs=$1
-R1=$2
-R2=$3
-if [ $# -gt 3 ]; then output=$4; else output=$1-yamb; fi
+#Default values for
+if [ -z $THREADS ]; then THREADS=1; fi
+if [ -z $MINLENGTH ]; then MINLENGTH=1000; fi
+if [ -z $output ]; then output=$R1-yamb; fi
 
 if [[ ! -e $output ]]; then mkdir $output; fi
 
@@ -33,11 +79,11 @@ if (which bowtie2 > /dev/null);then
 	bowtie2 -p $THREADS -q -x "$output/idx" -1 $R1 -2 $R2 -S "$output/mapping.sam"
 elif (which minimap2 > /dev/null); then
 	echo "Mapping reads with minimap2"
-	minimap2 -ax sr $contigs $R1 $R2 > "$output/mapping.sam"
+	minimap2 -x sr -a -t $THREADS $contigs $R1 $R2 > "$output/mapping.sam"
 elif (which bwa > /dev/null); then
 	echo "Mapping reads with bwa"
 	bwa index $contigs
-	bwa mem $contigs $R1 $R2 > "$output/mapping.sam"
+	bwa mem -t $THREADS $contigs $R1 $R2 > "$output/mapping.sam"
 else
 	echo "Read mappers not found! Exitting."
 	exit 1
@@ -45,7 +91,7 @@ fi
 
 echo "Converting SAM to BAM, sorting and indexing."
 mapping=$output"/mapping.bam"
-samtools view -F 4 -1 -b $output"/mapping.sam" | samtools sort - > $mapping && rm $output"/mapping.sam"
+samtools view -F 4 -u -b $output"/mapping.sam" | samtools sort - > $mapping && rm $output"/mapping.sam"
 samtools index $mapping
 
 echo "Indexing fasta."
@@ -60,7 +106,7 @@ echo "Datafile generation."
 paste $output/tetramers.csv <(awk -v FS="\t" -v OFS="\t" '{print $3/100, $2}' $output/coverage.csv) | awk '$259 > 1000' > $output/data.csv
 cd $output
 #Default parameters here. For more information run tsne-kmean.r
-tsne-clust.r -i data.csv
+tsne-clust.r -i data.csv -m $MINLENGTH
 if (which esl-sfetch > /dev/null)
 then
 	esl-sfetch --index cut.contigs.fna
@@ -72,7 +118,7 @@ then
 		mkdir $D
 		for i in $(seq 0 $N)
 		do
-			esl-sfetch -f cut.contigs.fna <(awk '{if($4 == '$i') print $1}' $f) | perl -lne 'if(/>(.+)_(\d+)/){$a=$1;$i=$2;if(!($a=~/$ao/ and $b==$i-1)){$ao=$a;$b=i;print "$_"}else{$b=$i}}else{print}' > $D/bin-$i.fna
+			esl-sfetch -f cut.contigs.fna <(awk '{if($4 == '$i') print $1}' $f) | perl -lne 'if(/>(.+)_(\d+)/){$a=$1;$i=$2;if(!($a=~/$ao/ and $b==$i-1)){$ao=$a;print "$_"}$b=$i}else{print}' > $D/bin-$i.fna
 		done
 	done
 else
