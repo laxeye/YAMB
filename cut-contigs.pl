@@ -51,12 +51,12 @@ foreach (@fasta){
 		my $localmax = $len / ($len/$maxl);
 		my $i = 0;
 		while(length($seq) >= 2*$localmax){
-			print(">$id"."_"."$i\n");
+			print(">$id"."_[$i]\n");
 			printseq(substr($seq,0,$localmax));
 			substr($seq,0,$localmax,'');
 			$i++;
 		}
-		print(">$id"."_"."$i\n");
+		print(">$id"."_[$i]\n");
 		printseq($seq)
 	}
 }
