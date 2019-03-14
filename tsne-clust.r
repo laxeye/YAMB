@@ -3,14 +3,16 @@ library(Rtsne)
 library(ggplot2)
 library(dbscan)
 library(getopt)
+library(RColorBrewer)
 
 spec = matrix(c(
-	'help','h', 0, "logical",
-	'clustering','c', 2, "character",
-	'inputfile','i', 1, "character",
-	'contignumber','n', 1, "integer",
-	'minimumlength','m',1,"integer"
-), byrow=TRUE, ncol=4)
+	'help','h', 0, "logical","Print short help message",
+	'log','L', 0, "logical","Perform logarythmization (not really recommended)",
+	'clustering','c', 2, "character","Clustering mode: h - HDBSCAN (default), k- k-means",
+	'inputfile','i', 1, "character", "Data file with TNF, coverage and contig length",
+	'contignumber','n', 1, "integer","Total number of analyzed contigs <10000>",
+	'minimumlength','m',1,"integer","Minimum length of contig <1000>"
+), byrow=TRUE, ncol=5)
 opt = getopt(spec)
 
 
@@ -31,6 +33,8 @@ if ( is.null( opt$clustering    ) ) { opt$clustering    = "h" }
 if ( is.null( opt$contignumber  ) ) { opt$contignumber  = 10000 }
 # Minimum contig length
 if ( is.null( opt$minimumlength ) ) { opt$minimumlength = 1000  }
+# Logarythm
+if ( is.null( opt$log           ) ) { opt$log           = FALSE }
 
 
 rdata <- read.delim(opt$inputfile,header=F)
@@ -40,12 +44,12 @@ rdata <- rdata[as.matrix(rdata[,lastcol])>=opt$minimumlength,]
 n <- min(opt$contignumber, nrow(rdata))
 
 mdata <- as.matrix(rdata[1:n,2:(lastcol-1)])
-Knorm <- apply(mdata,2,mean)
-normdata <- sweep(mdata,2,Knorm,"/")
+meanByCol <- apply(mdata,2,mean)
+normdata <- sweep(mdata,2,meanByCol,"/")
 
-do_log <- FALSE # Do logarythm
-if(do_log){
-	logdata <- apply(normdata + unique(sort(as.vector(normdata)))[2]/4,2,log)
+# Do logarythmization of data
+if(opt$log){
+	normdata <- apply(normdata + unique(sort(as.vector(normdata)))[2]/4,2,log)
 }
 
 cat(paste0("Loaded data for ", n, " sequences.\n"))
@@ -60,7 +64,7 @@ clustersvector = ceiling(c(5,10,15) * nn**0.4)
 
 
 mytsne <- function(i){
-	tsne <- if(do_log) Rtsne(logdata, perplexity=i) else Rtsne(normdata, perplexity=i)
+	tsne <- Rtsne(normdata, perplexity=i)
 	return(tsne$Y)
 }
 
@@ -76,8 +80,11 @@ mykmean <- function(tsne,nc,i){
 	}
 	datafile <- paste0("yamb-pp-",i,"-cl-",nc,".csv")
 	write.table(cldata,file=datafile,sep="\t",row.names = FALSE, quote=FALSE)
-	p <- ggplot(cldata) + geom_point(aes(x=X,y=Y,size=length,alpha=Ncoverage,colour=as.factor(cluster))) + scale_size(range=c(0.2,12))
-	p <- p + geom_label(data = as.data.frame(kx$centers),aes(x=V1,y=V2,label=rownames(kx$centers))) + theme_bw()
+	p <- ggplot(cldata) + 
+		geom_point(aes(x=X,y=Y,size=length,alpha=Ncoverage,colour=as.factor(cluster))) + 
+		scale_size(range=c(0.2,10)) +
+		geom_label(data = as.data.frame(kx$centers),aes(x=V1,y=V2,label=rownames(kx$centers))) + 
+		theme_bw()
 	return(p)
 }
 
@@ -93,7 +100,10 @@ myhdbscan <- function(tsne){
 	}
 	datafile <- paste0("yamb-pp-",i,"-hdbscan.csv")
 	write.table(cldata,file=datafile,sep="\t",row.names = FALSE, quote=FALSE)
-	p <- ggplot(cldata) + geom_point(aes(x=X,y=Y,size=length,alpha=Ncoverage,colour=as.factor(cluster))) + scale_size(range=c(0.2,12)) + theme_bw()
+	p <- ggplot(cldata) + 
+		geom_point(aes(x=X,y=Y,size=length,alpha=Ncoverage,colour=as.factor(cluster))) + 
+		scale_size(range=c(0.2,10)) + theme_bw() + 
+		scale_color_manual(values=c("black",colorRampPalette(brewer.pal(12,"Paired"))(nc)))
 	return(p)
 }
 

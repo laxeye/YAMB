@@ -4,31 +4,35 @@ use warnings;
 
 usage() if $#ARGV != 0;
 
-#Reading data
+# Reading data
 local $/ = ">";
 open(F,'<',"$ARGV[0]") || die $!;
 my @data = <F>;
 close F;
 shift @data;
 
-#Generating tetramers
+# Generating nonredundant tetramers
 my @nucl = ("A", "C", "G", "T");
 my @tetramers;
 
 foreach my $i (@nucl){
 	foreach my $j (@nucl){
 		foreach my $k (@nucl){
-			push @tetramers,$i.$j.$k.$_ foreach(@nucl)
+			foreach(@nucl){
+				my $t = $i.$j.$k.$_;
+				push @tetramers,$t if (not grep { revcomp($t) eq $_} @tetramers);
+			}
+
 		}
 	}
 }
 
-#Printing header
+# Printing header
 print "#SequenceName";
 print map {"\t" . $_} @tetramers;
 print "\n";
 
-#Iterating through data
+# Iterating through the data
 foreach(@data) {
 	my @result = ();
 	my ($title, $seq) = split /\n/,$_,2;
@@ -36,12 +40,33 @@ foreach(@data) {
 	my $length = length($seq) - 3;
 	foreach(@tetramers){
 		my $count = () = ($seq =~ /$_/gi);
-		push @result,sprintf "%.4f", 100*$count/$length;
+		$_ = revcomp($_);
+		my $count_r = () = ($seq =~ /$_/gi);
+		push @result,sprintf "%.4f", 100*($count+$count_r)/$length;
 	}
+	
 	print "$title";
 	print map {"\t" . $_} @result;
 	print "\n";	
 }
+
+#
+sub revcomp{
+	my $str = shift;
+	my @out = ();
+	push @out,comp($_) foreach(reverse split '',$str);
+	return join '',@out;
+}
+
+# Return complement nucleotide
+sub comp{
+	my $i = uc shift;
+	return "T" if($i eq "A");
+	return "G" if($i eq "C");
+	return "C" if($i eq "G");
+	return "A" if($i eq "T");
+}
+
 
 sub usage{
 	print "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\n";

@@ -110,7 +110,7 @@ samtools bedcov -Q 20 $output/contigs.bed $mapping | awk -F "\t" -v OFS="\t" '{p
 echo "Tetramer occurence estimation."
 $BIN_PATH/tetramers.pl $contigs | grep -v "^#" > $output/tetramers.csv
 echo "Datafile generation."
-paste $output/tetramers.csv <(awk -v FS="\t" -v OFS="\t" '{print $3/100, $2}' $output/coverage.csv) | awk '$259 > 1000' > $output/data.csv
+paste $output/tetramers.csv <(awk -v FS="\t" -v OFS="\t" '{print $3/100, $2}' $output/coverage.csv) | awk '$NF > 1000' > $output/data.csv
 cd $output
 #Default parameters here. For more information run tsne-kmean.r
 $BIN_PATH/tsne-clust.r -i data.csv -m $MINLENGTH
