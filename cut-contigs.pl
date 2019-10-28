@@ -20,7 +20,7 @@ if(defined $ARGV[1]){
 }
 
 #Short contigs removal
-my $minl = 500;
+my $minl = 1000;
 
 #Reading data
 local $/ = '>';

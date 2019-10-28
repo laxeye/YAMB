@@ -11,7 +11,9 @@ It's based on t-Distributed Stochastic Neighbor Embedding (t-SNE) (van der Maate
 * esl-sfetch from easel for sequence extracting
 
 To install R packages just run R environment and execute command:
-*install.packages(c("ggplot2","Rtsne","getopt","dbscan", "RColorBrewer"))*
+
+`install.packages(c("ggplot2","Rtsne","getopt","dbscan", "RColorBrewer"))`
+
 To install samtools use your OS package manager (apt-get, yum etc.) or bioconda.
 
 YAMB was tested on Ubuntu 16.04 and Ubuntu 18.04.
@@ -19,25 +21,18 @@ YAMB was tested on Ubuntu 16.04 and Ubuntu 18.04.
 ## How to use
 At first, add the folder with executables to your PATH variable.
 
-Run yamb.sh providing multifasta file with contigs, sequencing reads and output folder (optional, new folder *contigs filename*-yamb will be created by default):
-./yamb.sh -c <contigs.fasta> -f <R1.fastq\[.gz\]> -r <R2.fastq\[.gz\]> \[-o <output folder>\] \[ -t <CPU threads> \] \[ -m  <minimum contig length> \]
+Run yamb.sh providing multifasta file with contigs, sequencing reads (forward/unpaired reads are obluigate, reverse and merged reads are optional) and output folder (optional, new folder *contigs filename*-yamb will be created by default):
 
-In output folder you will find several files 
+`./yamb.sh -c <contigs.fasta> -f <R1.fastq[.gz]> [-r <R2.fastq[.gz]>] [-s <Merged.reads.fastq[.gz]>] [-o <output folder>] [-t <CPU threads>] [-m  <minimum contig length>]`
 
-*yamb-pp-<t-SNE perplexity>-hdbscan.csv*
+In output folder you will find several files `yamb-pp-<t-SNE perplexity>-hdbscan.csv` containing tab-separated values:
+Contig ID, 1st tSNE component, 2nd tSNE component, cluster #, normalized coverage, contig length. 
 
-These files are tab-separated sheets with columns:
-Contig ID, 1st tSNE component, 2nd tSNE component, cluster #, normalized coverage, contig length.
-
-Corresponding files 
-
-*yamb-pp-<t-SNE perplexity>-hdbscan.png*
-
-are two-dimensional visualizations of contig fragments. Bins are colored by different colours.
+Corresponding files `yamb-pp-<t-SNE perplexity>-hdbscan.png` are two-dimensional visualizations of contig fragments. Bins are colored by different colours.
 
 Contig acquisition is performed by easel utility "esl-sfetch". You can find metagenomic bins in folder *bins-yamb-pp-N*, where N is perplexity parameter.
 
-It's strongly recommended to estimate completeness and contamination of bins.
+It's strongly recommended to estimate completeness and contamination of bins (e.g. [CheckM](https://github.com/Ecogenomics/CheckM>)).
 
 
 ## Validation
@@ -56,7 +51,7 @@ A. Korzhenkov, 2017-2019
 
 Preprint is available on **bioRxiv**:
 
-*Korzhenkov, A. (2019). YAMB: metagenome binning using nonlinear dimensionality reduction and density-based clustering. BioRxiv, 521286.* doi: https://doi.org/10.1101/521286 
+Korzhenkov, A. (2019). *YAMB: metagenome binning using nonlinear dimensionality reduction and density-based clustering*. BioRxiv, 521286 <https://doi.org/10.1101/521286>
 
 ## How to participate
 
@@ -64,6 +59,6 @@ Feel free to post an issue or clone the source and make a pull request.
 
 ## References
 
-1. van der Maaten L.J.P. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245, 2014.
-2. Campello, Ricardo JGB, Davoud Moulavi, and Jörg Sander. "Density-based clustering based on hierarchical density estimates." Pacific-Asia conference on knowledge discovery and data mining. Springer, Berlin, Heidelberg, 2013.
-3. Parks DH, Imelfort M, Skennerton CT, Hugenholtz P, Tyson GW. 2015. CheckM: assessing the quality of microbial genomes recovered from isolates, single cells, and metagenomes. Genome Research, 25: 1043–1055.
+1. Van Der Maaten, L. (2014). Accelerating t-SNE using tree-based algorithms. The Journal of Machine Learning Research, 15(1), 3221-3245.
+2. Campello, R. J., Moulavi, D., & Sander, J. (2013, April). Density-based clustering based on hierarchical density estimates. In Pacific-Asia conference on knowledge discovery and data mining (pp. 160-172). Springer, Berlin, Heidelberg.
+3. Parks, D. H., Imelfort, M., Skennerton, C. T., Hugenholtz, P., & Tyson, G. W. (2015). CheckM: assessing the quality of microbial genomes recovered from isolates, single cells, and metagenomes. Genome research, 25(7), 1043-1055.
