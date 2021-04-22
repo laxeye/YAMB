@@ -86,7 +86,7 @@ if [[ ! -e $output ]]; then mkdir $output; fi
 
 BIN_PATH="`dirname \"$0\"`"
 
-$BIN_PATH/cut-contigs.pl $contigs LENGTH > "$output/cut.contigs.fna"
+$BIN_PATH/cut-contigs.pl $contigs $LENGTH > "$output/cut.contigs.fna"
 contigs="$output/cut.contigs.fna"
 
 if (which bowtie2 > /dev/null); then
