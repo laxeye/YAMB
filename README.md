@@ -1,3 +1,7 @@
+## Warning
+
+YAMB had been dicontinued and replaced with **[pyYAMB](https://github.com/laxeye/pyYAMB)** - faster and more powerful python implementation, that could be installed from [PyPI](https://pypi.org/project/pyYAMB/).
+
 # YAMB  (Yet Another Metagenome Binner) - semi-automatic pipeline for metagenomic contigs binning.
 It's based on t-Distributed Stochastic Neighbor Embedding (t-SNE) (van der Maaten, 2014) technique for dimensionality reduction, that uses tetranucleotide frequency distribution in metagenomic contigs and mean contig coverage, and HDBSCAN clustering method (Campello et.al., 2013).
 
